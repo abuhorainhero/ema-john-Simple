@@ -41,7 +41,7 @@ const Header = () => {
             <nav>
                 <Link to="/shop">Shop</Link>
                 <Link to="/review">Order Review</Link>
-                <Link to="/inventory">Manage Inventory</Link>
+                <Link to="/orders">Manege Inventory</Link>
                 {
                     loggedInUser.isSignedIn ? <button onClick={() => setLoggedInUser({})}>Sign Out</button> : <button onClick={googleSignIn}>Sign In</button>
                 }

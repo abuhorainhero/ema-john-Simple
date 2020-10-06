@@ -32,17 +32,14 @@ export const handleFbSignIn = () => {
     const fbProvider = new firebase.auth.FacebookAuthProvider();
     return firebase.auth().signInWithPopup(fbProvider)
         .then(result => {
-            var token = result.credential.accessToken;
             var user = result.user;
+            console.log(user);
             user.success = true;
             return user;
         })
         .catch(error => {
-            var errorCode = error.code;
             var errorMessage = error.message;
-            console.error(error.message)
-            var email = error.email;
-            var credential = error.credential;
+            console.error(errorMessage)
         });
 }
 
@@ -65,13 +62,14 @@ export const handleSignOut = () => {
         })
 }
 
-export const createUserWithEmailAndPassword = (name, email, password) => {
+export const createUserWithEmailAndPassword = ( name, email, password) => {
     return firebase.auth().createUserWithEmailAndPassword(email, password)
     .then(res => {
       const newUserInfo = res.user;
       newUserInfo.error = '';
       newUserInfo.success = true;
       updateUserName(name);
+      verifyEmail();
       return newUserInfo;
     })
     .catch(err => {
@@ -109,4 +107,24 @@ const updateUserName = (name) => {
     .catch(err => {
       console.error(err);
     })
+  }
+
+  const verifyEmail = () => {
+    var user = firebase.auth().currentUser;
+    user.sendEmailVerification()
+    .then(() => {
+      // Email sent.
+    })
+    .catch(error => {
+      // An error happened.
+    });
+  }
+
+  export const resetPassword = email => {
+    var auth = firebase.auth();
+    auth.sendPasswordResetEmail(email).then(function() {
+      // Email sent.
+    }).catch(function(error) {
+      // An error happened.
+    });
   }

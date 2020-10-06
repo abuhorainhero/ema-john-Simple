@@ -1,28 +1,42 @@
-import React, { useState } from 'react';
-import fakeData from '../../fakeData';
+import React, { useContext, useState } from 'react';
 import './Shop.css';
 import Product from '../Product/Product';
 import Cart from '../Cart/Cart';
 import { addToDatabaseCart, getDatabaseCart } from '../../utilities/databaseManager';
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { UserContext } from '../../App';
+import loadingImage from '../../loading.gif'
 
 const Shop = () => {
     // console.log(fakeData)
-    const first10 = fakeData.slice(0, 10);
-    const [products, setProducts] = useState(first10);
+    // const first10 = fakeData.slice(0, 10);
+    const [products, setProducts] = useState([]);
     const [cart, setCart] = useState([]);
 
-    useEffect(() =>{
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch('https://infinite-anchorage-99654.herokuapp.com/products')
+            .then(res => res.json())
+            .then(data => {
+                setProducts(data);
+                setLoading(false);
+            })
+    }, [])
+
+    useEffect(() => {
         const saveProduct = getDatabaseCart();
         const productKey = Object.keys(saveProduct);
-        const previousCart = productKey.map(existingKey => {
-            const product = fakeData.find(pd => pd.key === existingKey);
-            product.quantity = saveProduct[existingKey];
-            return product;
+        fetch('https://infinite-anchorage-99654.herokuapp.com/productByKeys', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(productKey)
         })
-        setCart(previousCart);
-    }, []);
+            .then(res => res.json())
+            .then(data => setCart(data))
+
+    }, [products]);
 
     const handleAddProduct = (product) => {
         const toBeAddedKey = product.key;
@@ -42,26 +56,31 @@ const Shop = () => {
         setCart(newCart);
 
         addToDatabaseCart(product.key, count)
-    } 
+    }
     return (
         <div className="twin-container">
-            <div className="product-container">
-                {
-                products.map(pd => <Product
-                    key={pd.key}
-                    showAddToCart={true} 
-                    product={pd}
-                    handleAddProduct = {handleAddProduct}
-                >
-                </Product>)
-                }
-            </div>
-            <div className="cart-container">
-                <Cart cart={cart}></Cart>
-                <Link to='/review'>
-                    <button className="main-btn">Review order</button>
-                </Link>
-            </div>
+            {
+                loading ? <img src={loadingImage} alt=""/> : <>
+                    <div className="product-container">
+                        {
+                            products.map(pd => <Product
+                                key={pd.key}
+                                showAddToCart={true}
+                                product={pd}
+                                handleAddProduct={handleAddProduct}
+                            >
+                            </Product>)
+                        }
+                    </div>
+                    <div className="cart-container">
+                        <Cart cart={cart}></Cart>
+                        <Link to='/review'>
+                            <button className="main-btn">Review order</button>
+                        </Link>
+                    </div>
+                </>
+            }
+
         </div>
     );
 };
